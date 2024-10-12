@@ -46,5 +46,10 @@ namespace minimal_api.Dominio.Servicos
 
             return query.ToList();
         }
+
+        public Administrador? BuscaPorId(int id)
+        {
+            return _contexto.Administradores.Where(v => v.Id == id).FirstOrDefault();
+        }
     }
 }

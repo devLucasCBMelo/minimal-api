@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using minimal_api.Dominio.DTOs;
 using minimal_api.Dominio.Entidades;
+using minimal_api.Dominio.Enums;
 using minimal_api.Dominio.Interfaces;
 using minimal_api.Dominio.ModelViews;
 using minimal_api.Dominio.Servicos;
@@ -66,19 +67,32 @@ app.MapPost("/administradores/", ([FromBody] AdministradorDTO administradorDTO, 
     validacao.Mensagens.Add("Perfil não pode ser vazio");
   }
 
-  if (validacao.Mensagens.Count > 0)
-  {
-    return Results.BadRequest(validacao);
-  }
+  if (validacao.Mensagens.Count > 0) return Results.BadRequest(validacao);
 
   var admin = new Administrador
   {
     Email = administradorDTO.Email,
     Senha = administradorDTO.Senha,
-    Perfil = administradorDTO.Perfil.ToString()
+    Perfil = administradorDTO.Perfil.ToString() ?? Perfil.editor.ToString() // Se vier vazio, coloca o editor como o padrão
   };
 
   administradorServico.Incluir(admin);
+
+  return Results.Created($"/administrador/{admin.Id}", admin);
+}).WithTags("Administradores");
+
+app.MapGet("/administradores", ([FromQuery] int? pagina, IAdministradorServico administradorServico) =>
+{
+  var administradores = administradorServico.Todos(pagina);
+  return Results.Ok(administradores);
+}).WithTags("Administradores");
+
+app.MapGet("/administradores/{id}", ([FromRoute] int id, IAdministradorServico administradorServico) =>
+{
+  var administrador = administradorServico.BuscaPorId(id);
+
+  if (administrador == null) return Results.NotFound();
+  return Results.Ok(administrador);
 }).WithTags("Administradores");
 #endregion
 
