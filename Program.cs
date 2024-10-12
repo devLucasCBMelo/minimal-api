@@ -33,7 +33,7 @@ app.MapGet("/", () => Results.Json(new Home())).WithTags("Home");
 #endregion
 
 #region Administradores
-app.MapPost("/login", ([FromBody] LoginDTO loginDTO, IAdministradorServico administradorServico) =>
+app.MapPost("/administradores/login", ([FromBody] LoginDTO loginDTO, IAdministradorServico administradorServico) =>
 {
   if (administradorServico.Login(loginDTO) != null)
   {
@@ -44,6 +44,41 @@ app.MapPost("/login", ([FromBody] LoginDTO loginDTO, IAdministradorServico admin
     return Results.Unauthorized();
 
   }
+}).WithTags("Administradores");
+
+app.MapPost("/administradores/", ([FromBody] AdministradorDTO administradorDTO, IAdministradorServico administradorServico) =>
+{
+  var validacao = new ErrosDeValidacao
+  {
+    Mensagens = new List<string>()
+  };
+
+  if (string.IsNullOrEmpty(administradorDTO.Email))
+  {
+    validacao.Mensagens.Add("Email não pode ser vazio");
+  }
+  if (string.IsNullOrEmpty(administradorDTO.Senha))
+  {
+    validacao.Mensagens.Add("Senha não pode ser vazia");
+  }
+  if (administradorDTO.Perfil == null)
+  {
+    validacao.Mensagens.Add("Perfil não pode ser vazio");
+  }
+
+  if (validacao.Mensagens.Count > 0)
+  {
+    return Results.BadRequest(validacao);
+  }
+
+  var admin = new Administrador
+  {
+    Email = administradorDTO.Email,
+    Senha = administradorDTO.Senha,
+    Perfil = administradorDTO.Perfil.ToString()
+  };
+
+  administradorServico.Incluir(admin);
 }).WithTags("Administradores");
 #endregion
 
